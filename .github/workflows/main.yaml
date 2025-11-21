@@ -1,0 +1,80 @@
+name: Flutter Desktop & iOS Build
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  common:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze code
+        run: flutter analyze
+      - name: Format code
+        run: dart format --set-exit-if-changed .
+      - name: Run tests
+        run: flutter test
+
+  build_windows:
+    needs: common
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build Windows
+        run: flutter build windows
+      # - name: Sign Windows App
+      #   run: |
+      #     # Replace with your actual signing command
+      #     signtool sign /f ${{ secrets.WINDOWS_CERT }} /p ${{ secrets.WINDOWS_CERT_PASSWORD }} /tr http://timestamp.digicert.com /td sha256 /fd sha256 build/windows/runner/Release/YourApp.exe
+
+  build_ios:
+    needs: common
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
+      # - name: Sign iOS App
+      #   env:
+      #     IOS_SIGNING_CERT: ${{ secrets.IOS_SIGNING_CERT }}
+      #     IOS_SIGNING_PROFILE: ${{ secrets.IOS_SIGNING_PROFILE }}
+      #   run: |
+      #     # Replace with your actual signing commands
+      #     fastlane run sigh
+      #     fastlane run gym
