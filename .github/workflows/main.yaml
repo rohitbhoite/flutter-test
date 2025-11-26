@@ -7,7 +7,8 @@ on:
     branches: ["*"]
 
 jobs:
-  common:
+  common_checks:
+    name: Common Checks (core package, test_app1, test_app2)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,18 +21,56 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Analyze code
-        run: flutter analyze
-      - name: Format code
-        run: dart format --set-exit-if-changed .
-      - name: Run tests
-        run: flutter test
 
-  build_windows:
-    needs: common
+      # Core package checks
+      - name: Install dependencies (core package)
+        run: flutter pub get
+        working-directory: packages/core
+      - name: Analyze code (core package)
+        run: flutter analyze
+        working-directory: packages/core
+      - name: Format code (core package)
+        run: dart format --set-exit-if-changed .
+        working-directory: packages/core
+      - name: Run tests (core package)
+        run: flutter test
+        working-directory: packages/core
+
+      # test_app1 checks
+      - name: Install dependencies (test_app1)
+        run: flutter pub get
+        working-directory: apps/test_app1
+      - name: Analyze code (test_app1)
+        run: flutter analyze
+        working-directory: apps/test_app1
+      - name: Format code (test_app1)
+        run: dart format --set-exit-if-changed .
+        working-directory: apps/test_app1
+      - name: Run tests (test_app1)
+        run: flutter test
+        working-directory: apps/test_app1
+
+      # test_app2 checks
+      - name: Install dependencies (test_app2)
+        run: flutter pub get
+        working-directory: apps/test_app2
+      - name: Analyze code (test_app2)
+        run: flutter analyze
+        working-directory: apps/test_app2
+      - name: Format code (test_app2)
+        run: dart format --set-exit-if-changed .
+        working-directory: apps/test_app2
+      - name: Run tests (test_app2)
+        run: flutter test
+        working-directory: apps/test_app2
+
+  build_windows_test_app1:
+    name: Build Windows (test_app1)
+    needs: common_checks
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/test_app1
     steps:
       - uses: actions/checkout@v3
       - name: Set up Java
@@ -52,9 +91,13 @@ jobs:
       #     # Replace with your actual signing command
       #     signtool sign /f ${{ secrets.WINDOWS_CERT }} /p ${{ secrets.WINDOWS_CERT_PASSWORD }} /tr http://timestamp.digicert.com /td sha256 /fd sha256 build/windows/runner/Release/YourApp.exe
 
-  build_ios:
-    needs: common
+  build_ios_test_app2:
+    name: Build iOS (test_app2)
+    needs: common_checks
     runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/test_app2
     steps:
       - uses: actions/checkout@v3
       - name: Set up Java
